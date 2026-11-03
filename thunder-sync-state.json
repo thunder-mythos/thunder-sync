@@ -1,13 +1,13 @@
 {
   "customBranch": "thunder",
   "forkRepo": "https://github.com/thunder-mythos/thunder-sync",
-  "lastSyncedDate": "2026-11-02",
-  "note": "Pushed 2026-11-02 per Thunder's order for this version. Fork thunder-mythos/thunder-sync, branch thunder pushed and verified, non-draft BRAT release 0.5.25-thunder.1 verified live with main.js, manifest.json, styles.css, thunder-sync.zip. Blocker: release workflow not live on GitHub (gh token has no workflow scope); workflow kept as thunder-release.yml.txt in the repo, releases cut manually with gh until the token gets workflow scope. Full plugin rework is a later separate task.",
+  "lastSyncedDate": "2026-11-03",
+  "note": "Release 0.5.25-thunder.2 cut 2026-11-03 on Thunder's order: settings page redo (one-page-at-a-time nav, Minimal Theme Settings + Style Settings model, no key or default changed), committed as 8112f79, pushed, and released as Latest with main.js, manifest.json, styles.css, thunder-sync.zip, downloaded back and hash-checked against the build Thunder hand-approved on his PC. Blocker unchanged: release workflow not live on GitHub (gh token has no workflow scope); workflow kept as thunder-release.yml.txt, releases cut manually with gh. Full plugin rework is a later separate task.",
   "pluginId": "thunder-sync",
   "pluginName": "Thunder Sync",
   "pushedBranch": "thunder",
-  "releaseTag": "0.5.25-thunder.1",
-  "releaseUrl": "https://github.com/thunder-mythos/thunder-sync/releases/tag/0.5.25-thunder.1",
+  "releaseTag": "0.5.25-thunder.2",
+  "releaseUrl": "https://github.com/thunder-mythos/thunder-sync/releases/tag/0.5.25-thunder.2",
   "upstreamCommit": "34db181af002f8d71ea0a87e7965abc57b294914",
   "upstreamRepo": "https://github.com/remotely-save/remotely-save.git",
   "upstreamVersion": "0.5.25"
