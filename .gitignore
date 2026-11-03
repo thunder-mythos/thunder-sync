@@ -9,6 +9,8 @@ pnpm-lock.yaml
 
 # build
 main.js
+# THUNDER: webpack lazy chunks emitted next to main.js (upstream releases ship main.js only)
+*.main.js
 *.js.map
 
 # obsidian
@@ -19,3 +21,6 @@ logs.txt
 
 # hidden files
 .*
+
+# THUNDER: local OAuth app credentials for personal builds, never commit
+.env

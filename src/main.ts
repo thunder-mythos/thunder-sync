@@ -18,6 +18,7 @@ import {
 } from "obsidian";
 import {
   DEFAULT_PRO_CONFIG,
+  THUNDER_ALL_PRO_FEATURES,
   getAndSaveProEmail,
   getAndSaveProFeatures,
   sendAuthReq as sendAuthReqPro,
@@ -1646,6 +1647,13 @@ export default class RemotelySavePlugin extends Plugin {
     if (this.settings.pro === undefined) {
       this.settings.pro = cloneDeep(DEFAULT_PRO_CONFIG);
     }
+
+    // THUNDER: personal build. Force every PRO feature on at load
+    // time so the settings UI shows all PRO service panels (they are
+    // hidden unless the feature is in enabledProFeatures) and no
+    // Remotely Save account is ever needed. See pro/src/account.ts.
+    this.settings.pro.enabledProFeatures =
+      cloneDeep(THUNDER_ALL_PRO_FEATURES);
 
     // save back
     if (needSave) {

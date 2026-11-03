@@ -17,12 +17,35 @@ import { codeVerifier2CodeChallenge } from "./oauth2";
 const site = PRO_WEBSITE;
 console.debug(`remotelysave official website: ${site}`);
 
+// THUNDER: personal build. All PRO features are enabled locally, no
+// Remotely Save account or subscription is consulted. The settings UI
+// shows or hides each PRO service panel based on enabledProFeatures,
+// and checkProRunnableAndFixInplace below gates syncs on the same
+// list, so every feature is seeded here exactly once. Expiry is set
+// far in the future (2100-01-01) as plain numbers, matching what the
+// PRO server returns at runtime. Marked for future upstream merges:
+// search this file, src/main.ts, and THUNDER.md for "THUNDER:".
+export const THUNDER_ALL_PRO_FEATURES: FeatureInfo[] = [
+  "feature-smart_conflict",
+  "feature-onedrive_full",
+  "feature-google_drive",
+  "feature-box",
+  "feature-pcloud",
+  "feature-yandex_disk",
+  "feature-koofr",
+  "feature-azure_blob_storage",
+].map((featureName) => ({
+  featureName: featureName as PRO_FEATURE_TYPE,
+  enableAtTimeMs: 0 as unknown as bigint,
+  expireAtTimeMs: 4102444800000 as unknown as bigint,
+}));
+
 export const DEFAULT_PRO_CONFIG: ProConfig = {
   accessToken: "",
   accessTokenExpiresInMs: 0,
   accessTokenExpiresAtTimeMs: 0,
   refreshToken: "",
-  enabledProFeatures: [],
+  enabledProFeatures: THUNDER_ALL_PRO_FEATURES,
   email: "",
 };
 
@@ -223,108 +246,27 @@ export const checkProRunnableAndFixInplace = async (
   pluginVersion: string,
   saveUpdatedConfigFunc: () => Promise<any> | undefined
 ): Promise<true> => {
-  console.debug(`checkProRunnableAndFixInplace`);
-
-  // many checks if status is valid
-
-  // no account
-  if (config.pro === undefined || config.pro.refreshToken === undefined) {
-    throw Error(`you need to "connect" to your account to use PRO features`);
+  // THUNDER: personal build. The upstream PRO subscription check is
+  // neutralized here: no Remotely Save account, token, or server call
+  // is required. All PRO features (Smart Conflict and every PRO
+  // service) are treated as enabled. Existing installs may carry an
+  // old empty enabledProFeatures list in data.json, so it is reset
+  // in place to the full local list and saved back.
+  console.debug(`checkProRunnableAndFixInplace (Thunder: always enabled)`);
+  if (config.pro === undefined) {
+    config.pro = { ...DEFAULT_PRO_CONFIG };
   }
-
-  // every features should have at most 40 days expiration dates
-  // and if the time has expired, we also check
-  const msIn40Days = 1000 * 60 * 60 * 24 * 40;
-  for (const f of config.pro.enabledProFeatures) {
-    const tooFarInTheFuture = f.expireAtTimeMs >= Date.now() + msIn40Days;
-    const alreadyExpired = f.expireAtTimeMs <= Date.now();
-    if (tooFarInTheFuture || alreadyExpired) {
-      console.info(
-        `the pro feature is too far in the future and has expired, check again.`
-      );
-      await getAndSaveProFeatures(
-        config.pro,
-        pluginVersion,
-        saveUpdatedConfigFunc
-      );
-      break;
-    }
+  const alreadyEnabled =
+    config.pro.enabledProFeatures?.length ===
+      THUNDER_ALL_PRO_FEATURES.length &&
+    THUNDER_ALL_PRO_FEATURES.every((f) =>
+      config.pro!.enabledProFeatures.some(
+        (x) => x.featureName === f.featureName
+      )
+    );
+  if (!alreadyEnabled) {
+    config.pro.enabledProFeatures = [...THUNDER_ALL_PRO_FEATURES];
+    await saveUpdatedConfigFunc?.();
   }
-
-  const errorMsgs = [];
-
-  // check for smart_conflict
-  if (config.conflictAction === "smart_conflict") {
-    if (
-      config.pro.enabledProFeatures.filter(
-        (x) => x.featureName === "feature-smart_conflict"
-      ).length === 1
-    ) {
-      // good to go
-    } else {
-      errorMsgs.push(
-        `You're trying to use "smart conflict" PRO feature but you haven't subscribe to it.`
-      );
-    }
-  } else {
-    // good to go
-  }
-
-  const toChecked: {
-    feature: PRO_FEATURE_TYPE;
-    service: SUPPORTED_SERVICES_TYPE;
-    name: string;
-  }[] = [
-    {
-      feature: "feature-google_drive",
-      service: "googledrive",
-      name: "Google Drive",
-    },
-    {
-      feature: "feature-onedrive_full",
-      service: "onedrivefull",
-      name: "Onedrive (Full)",
-    },
-    { feature: "feature-box", service: "box", name: "Box" },
-    { feature: "feature-pcloud", service: "pcloud", name: "pCloud" },
-    {
-      feature: "feature-yandex_disk",
-      service: "yandexdisk",
-      name: "Yandex Disk",
-    },
-    {
-      feature: "feature-koofr",
-      service: "koofr",
-      name: "Koofr",
-    },
-    {
-      feature: "feature-azure_blob_storage",
-      service: "azureblobstorage",
-      name: "Azure Blob Storage",
-    },
-  ];
-
-  for (const { feature, service, name } of toChecked) {
-    console.debug(`checking "${feature}", serviceType=${config.serviceType}`);
-    if (config.serviceType === service) {
-      if (
-        config.pro.enabledProFeatures.filter((x) => x.featureName === feature)
-          .length === 1
-      ) {
-        // good to go
-      } else {
-        errorMsgs.push(
-          `You're trying to use "sync with ${name}" PRO feature but you haven't subscribe to it.`
-        );
-      }
-    } else {
-      // good to go
-    }
-  }
-
-  if (errorMsgs.length !== 0) {
-    throw Error(errorMsgs.join("\n\n"));
-  }
-
   return true;
 };
