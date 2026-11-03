@@ -2,7 +2,11 @@
 
 Personal build of [remotely-save/remotely-save](https://github.com/remotely-save/remotely-save) for Thunder's own devices. Upstream base: master at commit `34db181` (2024-11-10), version 0.5.25. Thunder branch: `thunder`.
 
-Status (2026-11-02): renamed to Thunder Sync, settings page overhauled, built and verified locally on the VM only. This is local/staging proof, not live proof. No GitHub push and no release yet: Thunder ordered the settings overhaul before any push, and a bigger plugin rework comes later as a separate task.
+Status (2026-11-02): renamed to Thunder Sync, settings page overhauled, pushed, and released.
+- Fork: https://github.com/thunder-mythos/remotely-save, branch `thunder` pushed and verified (head `f63e5e1` at release time).
+- BRAT release: **0.5.25-thunder.1**, non-draft, verified live at https://github.com/thunder-mythos/remotely-save/releases/tag/0.5.25-thunder.1 with assets `main.js`, `manifest.json`, `styles.css`, `thunder-sync.zip`. The release manifest carries id `thunder-sync`, name Thunder Sync, version `0.5.25-thunder.1` (downloaded back and checked).
+- The build/test verification behind it is still local/staging proof from the VM, not a live-device install proof.
+- One blocker: the release workflow is NOT live on GitHub. The gh OAuth token has no `workflow` scope, so GitHub rejected the first push for `.github/workflows/thunder-release.yml` only. The workflow is kept in the repo as `thunder-release.yml.txt`; move it back to `.github/workflows/thunder-release.yml` after a `gh auth refresh -s workflow` (needs Thunder's device approval), or create it in the GitHub web editor. Until then, releases are cut manually with `gh release create`, like this one. The bigger plugin rework is a later, separate task.
 
 ## Rename (confirmed by Thunder, 2026-11-02)
 

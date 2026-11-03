@@ -1,12 +1,13 @@
 {
   "customBranch": "thunder",
-  "forkRepo": "thunder-mythos/remotely-save (not yet created; created at push time in this run)",
+  "forkRepo": "https://github.com/thunder-mythos/remotely-save",
   "lastSyncedDate": "2026-11-02",
-  "note": "Personal build for Thunder's own devices. All upstream features kept, PRO subscription check neutralized locally (see THUNDER.md). Rename to Thunder Sync / thunder-sync confirmed by Thunder and applied 2026-11-02. Settings page overhaul done before any push, per Thunder's order. Local commits only; no GitHub push, no fork, no release yet. Push held pending Thunder's separate full plugin rework task.",
+  "note": "Pushed 2026-11-02 per Thunder's order for this version. Fork thunder-mythos/remotely-save, branch thunder pushed and verified, non-draft BRAT release 0.5.25-thunder.1 verified live with main.js, manifest.json, styles.css, thunder-sync.zip. Blocker: release workflow not live on GitHub (gh token has no workflow scope); workflow kept as thunder-release.yml.txt in the repo, releases cut manually with gh until the token gets workflow scope. Full plugin rework is a later separate task.",
   "pluginId": "thunder-sync",
   "pluginName": "Thunder Sync",
-  "pushedBranch": null,
-  "releaseTag": null,
+  "pushedBranch": "thunder",
+  "releaseTag": "0.5.25-thunder.1",
+  "releaseUrl": "https://github.com/thunder-mythos/remotely-save/releases/tag/0.5.25-thunder.1",
   "upstreamCommit": "34db181af002f8d71ea0a87e7965abc57b294914",
   "upstreamRepo": "https://github.com/remotely-save/remotely-save.git",
   "upstreamVersion": "0.5.25"
