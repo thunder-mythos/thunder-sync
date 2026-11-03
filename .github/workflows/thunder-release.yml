@@ -56,14 +56,14 @@ jobs:
 
       - name: Package zip
         if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
-        run: zip remotely-save-thunder.zip main.js manifest.json styles.css
+        run: zip thunder-sync.zip main.js manifest.json styles.css
 
       - name: Publish non-draft release for BRAT
         if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ inputs.release_tag }}" main.js manifest.json styles.css remotely-save-thunder.zip \
+          gh release create "${{ inputs.release_tag }}" main.js manifest.json styles.css thunder-sync.zip \
             --title "${{ inputs.release_tag }}" \
             --notes "Thunder personal build of Remotely Save (upstream 0.5.25). All features kept, PRO subscription check neutralized locally. See THUNDER.md. Install with BRAT: thunder-mythos/remotely-save. Do not update this plugin from the community plugin browser afterwards, or upstream replaces this build." \
             --latest
