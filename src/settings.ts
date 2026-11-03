@@ -821,8 +821,27 @@ export const wrapTextWithPasswordHide = (text: TextComponent) => {
   return text;
 };
 
+export type ThunderSyncPageId =
+  | "service"
+  | "sync-behavior"
+  | "encryption"
+  | "filters"
+  | "advanced"
+  | "backup"
+  | "debug";
+
+// Section registry for the Thunder Sync settings tab (Track B).
+// Labels are resolved at display() time so locale changes apply on
+// re-display. A later Track A migration can read this same registry
+// to build getSettingDefinitions() pages in the same order.
+export interface ThunderSyncPageDef {
+  id: ThunderSyncPageId;
+  label: () => string;
+}
+
 export class RemotelySaveSettingTab extends PluginSettingTab {
   readonly plugin: RemotelySavePlugin;
+  thunderActivePage: ThunderSyncPageId = "service";
 
   constructor(app: App, plugin: RemotelySavePlugin) {
     super(app, plugin);
@@ -842,18 +861,95 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     containerEl.createEl("h1", { text: "Thunder Sync" });
 
     //////////////////////////////////////////////////
+    // Thunder Sync: in-tab pages (Track B)
+    // Controls are created directly into their page container in
+    // final order. No DOM re-parenting, no details wrappers.
+    // The registry below is the single source for page order and
+    // labels, so a later declarative migration reads the same list.
+    //////////////////////////////////////////////////
+    const thunderPages: ThunderSyncPageDef[] = [
+      { id: "service", label: () => t("settings_chooseservice") },
+      { id: "sync-behavior", label: () => "Sync behavior" },
+      { id: "encryption", label: () => "Encryption" },
+      { id: "filters", label: () => "Filters and safety" },
+      { id: "advanced", label: () => t("settings_adv") },
+      { id: "backup", label: () => t("settings_importexport") },
+      { id: "debug", label: () => t("settings_debug") },
+    ];
+    const thunderPageEls = {} as Record<ThunderSyncPageId, HTMLDivElement>;
+    const thunderNavButtons = {} as Record<
+      ThunderSyncPageId,
+      HTMLButtonElement
+    >;
+    const showThunderPage = (id: ThunderSyncPageId) => {
+      this.thunderActivePage = id;
+      for (const def of thunderPages) {
+        const active = def.id === id;
+        thunderPageEls[def.id].toggleClass("thunder-sync-page-hide", !active);
+        thunderNavButtons[def.id].toggleClass(
+          "thunder-sync-nav-button-active",
+          active
+        );
+        thunderNavButtons[def.id].setAttribute(
+          "aria-pressed",
+          active ? "true" : "false"
+        );
+      }
+    };
+    const thunderNav = containerEl.createDiv({
+      cls: "thunder-sync-nav",
+    });
+    for (const def of thunderPages) {
+      const btn = thunderNav.createEl("button", {
+        text: def.label(),
+        cls: "thunder-sync-nav-button",
+      });
+      thunderNavButtons[def.id] = btn;
+      btn.addEventListener("click", () => showThunderPage(def.id));
+    }
+    const createThunderPage = (
+      id: ThunderSyncPageId,
+      heading?: string
+    ): HTMLDivElement => {
+      const el = containerEl.createDiv({ cls: "thunder-sync-page" });
+      if (heading) {
+        el.createEl("h2", { text: heading });
+      }
+      thunderPageEls[id] = el;
+      return el;
+    };
+    const servicePage = createThunderPage("service");
+    const syncBehaviorPage = createThunderPage(
+      "sync-behavior",
+      "Sync behavior"
+    );
+    const encryptionPage = createThunderPage("encryption", "Encryption");
+    const filtersPage = createThunderPage("filters", "Filters and safety");
+    const advancedPage = createThunderPage("advanced", t("settings_adv"));
+    const backupPage = createThunderPage(
+      "backup",
+      t("settings_importexport")
+    );
+    const debugPage = createThunderPage("debug", t("settings_debug"));
+    showThunderPage(
+      thunderPages.some((d) => d.id === this.thunderActivePage)
+        ? this.thunderActivePage
+        : "service"
+    );
+
+    //////////////////////////////////////////////////
     // below for service chooser (part 1/2)
     //////////////////////////////////////////////////
 
     // we need to create the div in advance of any other service divs
-    const serviceChooserDiv = containerEl.createDiv();
+    const serviceChooserDiv = servicePage.createDiv();
     serviceChooserDiv.createEl("h2", { text: t("settings_chooseservice") });
 
     //////////////////////////////////////////////////
     // below for s3
     //////////////////////////////////////////////////
 
-    const s3Div = containerEl.createEl("div", { cls: "s3-hide" });
+    const s3Div = servicePage.createEl("div", { cls: "s3-hide" });
     s3Div.toggleClass("s3-hide", this.plugin.settings.serviceType !== "s3");
     s3Div.createEl("h2", { text: t("settings_s3") });
 
@@ -1151,7 +1247,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     // below for dropbpx
     //////////////////////////////////////////////////
 
-    const dropboxDiv = containerEl.createEl("div", { cls: "dropbox-hide" });
+    const dropboxDiv = servicePage.createEl("div", { cls: "dropbox-hide" });
     dropboxDiv.toggleClass(
       "dropbox-hide",
       this.plugin.settings.serviceType !== "dropbox"
@@ -1331,7 +1427,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     // below for onedrive
     //////////////////////////////////////////////////
 
-    const onedriveDiv = containerEl.createEl("div", { cls: "onedrive-hide" });
+    const onedriveDiv = servicePage.createEl("div", { cls: "onedrive-hide" });
     onedriveDiv.toggleClass(
       "onedrive-hide",
       this.plugin.settings.serviceType !== "onedrive"
@@ -1488,7 +1584,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     // below for webdav
     //////////////////////////////////////////////////
 
-    const webdavDiv = containerEl.createEl("div", { cls: "webdav-hide" });
+    const webdavDiv = servicePage.createEl("div", { cls: "webdav-hide" });
     webdavDiv.toggleClass(
       "webdav-hide",
       this.plugin.settings.serviceType !== "webdav"
@@ -1717,7 +1813,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     // below for webdis
     //////////////////////////////////////////////////
 
-    const webdisDiv = containerEl.createEl("div", { cls: "webdis-hide" });
+    const webdisDiv = servicePage.createEl("div", { cls: "webdis-hide" });
     webdisDiv.toggleClass(
       "webdis-hide",
       this.plugin.settings.serviceType !== "webdis"
@@ -1847,7 +1943,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
       onedriveFullAllowedToUsedDiv,
       onedriveFullNotShowUpHintSetting,
     } = generateOnedriveFullSettingsPart(
-      containerEl,
+      servicePage,
       t,
       this.app,
       this.plugin,
@@ -1863,7 +1959,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
       googleDriveAllowedToUsedDiv,
       googleDriveNotShowUpHintSetting,
     } = generateGoogleDriveSettingsPart(
-      containerEl,
+      servicePage,
       t,
       this.app,
       this.plugin,
@@ -1875,7 +1971,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     //////////////////////////////////////////////////
 
     const { boxDiv, boxAllowedToUsedDiv, boxNotShowUpHintSetting } =
-      generateBoxSettingsPart(containerEl, t, this.app, this.plugin, () =>
+      generateBoxSettingsPart(servicePage, t, this.app, this.plugin, () =>
         this.plugin.saveSettings()
       );
 
@@ -1884,7 +1980,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     //////////////////////////////////////////////////
 
     const { pCloudDiv, pCloudAllowedToUsedDiv, pCloudNotShowUpHintSetting } =
-      generatePCloudSettingsPart(containerEl, t, this.app, this.plugin, () =>
+      generatePCloudSettingsPart(servicePage, t, this.app, this.plugin, () =>
         this.plugin.saveSettings()
       );
 
@@ -1897,7 +1993,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
       yandexDiskAllowedToUsedDiv,
       yandexDiskNotShowUpHintSetting,
     } = generateYandexDiskSettingsPart(
-      containerEl,
+      servicePage,
       t,
       this.app,
       this.plugin,
@@ -1909,7 +2005,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     //////////////////////////////////////////////////
 
     const { koofrDiv, koofrAllowedToUsedDiv, koofrNotShowUpHintSetting } =
-      generateKoofrSettingsPart(containerEl, t, this.app, this.plugin, () =>
+      generateKoofrSettingsPart(servicePage, t, this.app, this.plugin, () =>
         this.plugin.saveSettings()
       );
 
@@ -1922,7 +2018,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
       azureBlobStorageAllowedToUsedDiv,
       azureBlobStorageNotShowUpHintSetting,
     } = generateAzureBlobStorageSettingsPart(
-      containerEl,
+      servicePage,
       t,
       this.app,
       this.plugin,
@@ -2032,11 +2128,8 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     // below for basic settings
     //////////////////////////////////////////////////
 
-    const basicDiv = containerEl.createEl("div");
-    basicDiv.createEl("h2", { text: t("settings_basic") });
-
-    const passwordSetting = new Setting(basicDiv);
-    const encryptionMethodSetting = new Setting(basicDiv);
+    const passwordSetting = new Setting(encryptionPage);
+    const encryptionMethodSetting = new Setting(encryptionPage);
 
     let newPassword = `${this.plugin.settings.password}`;
     passwordSetting
@@ -2085,7 +2178,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    const autoRunSetting = new Setting(basicDiv)
+    const autoRunSetting = new Setting(syncBehaviorPage)
       .setName(t("settings_autorun"))
       .setDesc(t("settings_autorun_desc"))
       .addDropdown((dropdown) => {
@@ -2123,7 +2216,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    const runOnStartupSetting = new Setting(basicDiv)
+    const runOnStartupSetting = new Setting(syncBehaviorPage)
       .setName(t("settings_runoncestartup"))
       .setDesc(t("settings_runoncestartup_desc"))
       .addDropdown((dropdown) => {
@@ -2149,7 +2242,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    const syncOnSaveSetting = new Setting(basicDiv)
+    const syncOnSaveSetting = new Setting(syncBehaviorPage)
       .setName(t("settings_synconsave"))
       .setDesc(t("settings_synconsave_desc"))
       .addDropdown((dropdown) => {
@@ -2170,7 +2263,40 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    const skipLargeFilesSetting = new Setting(basicDiv)
+    const syncDirectionSetting = new Setting(syncBehaviorPage)
+      .setName(t("setting_syncdirection"))
+      .setDesc(stringToFragment(t("setting_syncdirection_desc")))
+      .addDropdown((dropdown) => {
+        dropdown.addOption(
+          "bidirectional",
+          t("setting_syncdirection_bidirectional_desc")
+        );
+        dropdown.addOption(
+          "incremental_push_only",
+          t("setting_syncdirection_incremental_push_only_desc")
+        );
+        dropdown.addOption(
+          "incremental_pull_only",
+          t("setting_syncdirection_incremental_pull_only_desc")
+        );
+        dropdown.addOption(
+          "incremental_push_and_delete_only",
+          t("setting_syncdirection_incremental_push_and_delete_only_desc")
+        );
+        dropdown.addOption(
+          "incremental_pull_and_delete_only",
+          t("setting_syncdirection_incremental_pull_and_delete_only_desc")
+        );
+
+        dropdown
+          .setValue(this.plugin.settings.syncDirection ?? "bidirectional")
+          .onChange(async (val) => {
+            this.plugin.settings.syncDirection = val as SyncDirectionType;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    const skipLargeFilesSetting = new Setting(filtersPage)
       .setName(t("settings_skiplargefiles"))
       .setDesc(t("settings_skiplargefiles_desc"))
       .addDropdown((dropdown) => {
@@ -2188,45 +2314,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    // custom status bar items is not supported on mobile
-    if (!Platform.isMobileApp) {
-      new Setting(basicDiv)
-        .setName(t("settings_enablestatusbar_info"))
-        .setDesc(t("settings_enablestatusbar_info_desc"))
-        .addToggle((toggle) => {
-          toggle
-            .setValue(this.plugin.settings.enableStatusBarInfo ?? false)
-            .onChange(async (val) => {
-              this.plugin.settings.enableStatusBarInfo = val;
-              await this.plugin.saveSettings();
-              new Notice(t("settings_enablestatusbar_reloadrequired_notice"));
-            });
-        });
-
-      new Setting(basicDiv)
-        .setName(t("settings_resetstatusbar_time"))
-        .setDesc(t("settings_resetstatusbar_time_desc"))
-        .addButton((button) => {
-          button.setButtonText(t("settings_resetstatusbar_button"));
-          button.onClick(async () => {
-            // reset last sync time
-            await upsertLastSuccessSyncTimeByVault(
-              this.plugin.db,
-              this.plugin.vaultRandomID,
-              -1
-            );
-            await upsertLastFailedSyncTimeByVault(
-              this.plugin.db,
-              this.plugin.vaultRandomID,
-              -1
-            );
-            this.plugin.updateLastSyncMsg(undefined, "not_syncing", null, null);
-            new Notice(t("settings_resetstatusbar_notice"));
-          });
-        });
-    }
-
-    const ignorePathsSetting = new Setting(basicDiv)
+    const ignorePathsSetting = new Setting(filtersPage)
       .setName(t("settings_ignorepaths"))
       .setDesc(t("settings_ignorepaths_desc"))
       .setClass("ignorepaths-settings")
@@ -2247,7 +2335,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
         textArea.inputEl.addClass("ignorepaths-textarea");
       });
 
-    const onlyAllowPathsSetting = new Setting(basicDiv)
+    const onlyAllowPathsSetting = new Setting(filtersPage)
       .setName(t("settings_onlyallowpaths"))
       .setDesc(t("settings_onlyallowpaths_desc"))
       .setClass("onlyallowpaths-settings")
@@ -2268,168 +2356,11 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
         textArea.inputEl.addClass("onlyallowpaths-textarea");
       });
 
-    //////////////////////////////////////////////////
-    // below for advanced settings
-    //////////////////////////////////////////////////
-    const advDiv = containerEl.createEl("div");
-    advDiv.createEl("h2", {
-      text: t("settings_adv"),
-    });
-
-    new Setting(advDiv)
-      .setName(t("settings_concurrency"))
-      .setDesc(t("settings_concurrency_desc"))
-      .addDropdown((dropdown) => {
-        dropdown.addOption("1", "1");
-        dropdown.addOption("2", "2");
-        dropdown.addOption("3", "3");
-        dropdown.addOption("5", "5 (default)");
-        dropdown.addOption("10", "10");
-        dropdown.addOption("15", "15");
-        dropdown.addOption("20", "20");
-
-        dropdown
-          .setValue(`${this.plugin.settings.concurrency}`)
-          .onChange(async (val) => {
-            const realVal = Number.parseInt(val);
-            this.plugin.settings.concurrency = realVal;
-            await this.plugin.saveSettings();
-          });
-      });
-
-    const syncUnderscoreSetting = new Setting(advDiv)
-      .setName(t("settings_syncunderscore"))
-      .setDesc(t("settings_syncunderscore_desc"))
-      .addDropdown((dropdown) => {
-        dropdown.addOption("disable", t("disable"));
-        dropdown.addOption("enable", t("enable"));
-        dropdown
-          .setValue(
-            `${this.plugin.settings.syncUnderscoreItems ? "enable" : "disable"}`
-          )
-          .onChange(async (val) => {
-            this.plugin.settings.syncUnderscoreItems = val === "enable";
-            await this.plugin.saveSettings();
-          });
-      });
-
-    const configDirSetting = new Setting(advDiv)
-      .setName(t("settings_configdir"))
-      .setDesc(
-        t("settings_configdir_desc", {
-          configDir: this.app.vault.configDir,
-        })
-      )
-      .addDropdown((dropdown) => {
-        dropdown.addOption("disable", t("disable"));
-        dropdown.addOption("enable", t("enable"));
-
-        const bridge = {
-          secondConfirm: false,
-        };
-        dropdown
-          .setValue(
-            `${this.plugin.settings.syncConfigDir ? "enable" : "disable"}`
-          )
-          .onChange(async (val) => {
-            if (val === "enable" && !bridge.secondConfirm) {
-              dropdown.setValue("disable");
-              new SyncConfigDirModal(this.app, this.plugin, () => {
-                bridge.secondConfirm = true;
-                dropdown.setValue("enable");
-              }).open();
-            } else {
-              bridge.secondConfirm = false;
-              this.plugin.settings.syncConfigDir = false;
-              await this.plugin.saveSettings();
-            }
-          });
-      });
-
-    const bookmarksSetting = new Setting(advDiv)
-      .setName(t("settings_bookmarks"))
-      .setDesc(
-        t("settings_bookmarks_desc", {
-          configDir: this.app.vault.configDir,
-        })
-      )
-      .addDropdown((dropdown) => {
-        dropdown.addOption("disable", t("disable"));
-        dropdown.addOption("enable", t("enable"));
-
-        dropdown
-          .setValue(
-            `${this.plugin.settings.syncBookmarks ? "enable" : "disable"}`
-          )
-          .onChange(async (val) => {
-            this.plugin.settings.syncBookmarks = val === "enable";
-            await this.plugin.saveSettings();
-          });
-      });
-
-    const deleteToWhereSetting = new Setting(advDiv)
-      .setName(t("settings_deletetowhere"))
-      .setDesc(t("settings_deletetowhere_desc"))
-      .addDropdown((dropdown) => {
-        dropdown.addOption("system", t("settings_deletetowhere_system_trash"));
-        dropdown.addOption(
-          "obsidian",
-          t("settings_deletetowhere_obsidian_trash")
-        );
-        dropdown
-          .setValue(this.plugin.settings.deleteToWhere ?? "system")
-          .onChange(async (val) => {
-            this.plugin.settings.deleteToWhere = val as "system" | "obsidian";
-            await this.plugin.saveSettings();
-          });
-      });
-
-    let conflictActionSettingOrigDesc = t("settings_conflictaction_desc");
-    if (
-      (this.plugin.settings.conflictAction ?? "keep_newer") === "smart_conflict"
-    ) {
-      conflictActionSettingOrigDesc += t(
-        "settings_conflictaction_smart_conflict_desc"
-      );
-    }
-    const conflictActionSetting = new Setting(advDiv)
-      .setName(t("settings_conflictaction"))
-      .setDesc(stringToFragment(conflictActionSettingOrigDesc));
-    conflictActionSetting.addDropdown((dropdown) => {
-      dropdown
-        .addOption("keep_newer", t("settings_conflictaction_keep_newer"))
-        .addOption("keep_larger", t("settings_conflictaction_keep_larger"))
-        .addOption(
-          "smart_conflict",
-          t("settings_conflictaction_smart_conflict")
-        )
-        .setValue(this.plugin.settings.conflictAction ?? "keep_newer")
-        .onChange(async (val) => {
-          this.plugin.settings.conflictAction = val as ConflictActionType;
-          await this.plugin.saveSettings();
-
-          conflictActionSettingOrigDesc = t("settings_conflictaction_desc");
-          if (
-            (this.plugin.settings.conflictAction ?? "keep_newer") ===
-            "smart_conflict"
-          ) {
-            conflictActionSettingOrigDesc += t(
-              "settings_conflictaction_smart_conflict_desc"
-            );
-          }
-          conflictActionSetting.setDesc(
-            stringToFragment(conflictActionSettingOrigDesc)
-          );
-        });
-    });
-
-    generateClearDupFilesSettingsPart(advDiv, t, this.app, this.plugin);
-
-    const percentage1 = new Setting(advDiv)
+    const percentage1 = new Setting(filtersPage)
       .setName(t("settings_protectmodifypercentage"))
       .setDesc(t("settings_protectmodifypercentage_desc"));
 
-    const percentage2 = new Setting(advDiv)
+    const percentage2 = new Setting(filtersPage)
       .setName(t("settings_protectmodifypercentage_customfield"))
       .setDesc(t("settings_protectmodifypercentage_customfield_desc"));
     if ((this.plugin.settings.protectModifyPercentage ?? 50) % 10 === 0) {
@@ -2497,38 +2428,159 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
       });
     });
 
-    const syncDirectionSetting = new Setting(advDiv)
-      .setName(t("setting_syncdirection"))
-      .setDesc(stringToFragment(t("setting_syncdirection_desc")))
+    //////////////////////////////////////////////////
+    // below for advanced settings
+    //////////////////////////////////////////////////
+    const advDiv = advancedPage;
+
+    new Setting(advDiv)
+      .setName(t("settings_concurrency"))
+      .setDesc(t("settings_concurrency_desc"))
       .addDropdown((dropdown) => {
-        dropdown.addOption(
-          "bidirectional",
-          t("setting_syncdirection_bidirectional_desc")
-        );
-        dropdown.addOption(
-          "incremental_push_only",
-          t("setting_syncdirection_incremental_push_only_desc")
-        );
-        dropdown.addOption(
-          "incremental_pull_only",
-          t("setting_syncdirection_incremental_pull_only_desc")
-        );
-        dropdown.addOption(
-          "incremental_push_and_delete_only",
-          t("setting_syncdirection_incremental_push_and_delete_only_desc")
-        );
-        dropdown.addOption(
-          "incremental_pull_and_delete_only",
-          t("setting_syncdirection_incremental_pull_and_delete_only_desc")
-        );
+        dropdown.addOption("1", "1");
+        dropdown.addOption("2", "2");
+        dropdown.addOption("3", "3");
+        dropdown.addOption("5", "5 (default)");
+        dropdown.addOption("10", "10");
+        dropdown.addOption("15", "15");
+        dropdown.addOption("20", "20");
 
         dropdown
-          .setValue(this.plugin.settings.syncDirection ?? "bidirectional")
+          .setValue(`${this.plugin.settings.concurrency}`)
           .onChange(async (val) => {
-            this.plugin.settings.syncDirection = val as SyncDirectionType;
+            const realVal = Number.parseInt(val);
+            this.plugin.settings.concurrency = realVal;
             await this.plugin.saveSettings();
           });
       });
+
+    const syncUnderscoreSetting = new Setting(filtersPage)
+      .setName(t("settings_syncunderscore"))
+      .setDesc(t("settings_syncunderscore_desc"))
+      .addDropdown((dropdown) => {
+        dropdown.addOption("disable", t("disable"));
+        dropdown.addOption("enable", t("enable"));
+        dropdown
+          .setValue(
+            `${this.plugin.settings.syncUnderscoreItems ? "enable" : "disable"}`
+          )
+          .onChange(async (val) => {
+            this.plugin.settings.syncUnderscoreItems = val === "enable";
+            await this.plugin.saveSettings();
+          });
+      });
+
+    const configDirSetting = new Setting(filtersPage)
+      .setName(t("settings_configdir"))
+      .setDesc(
+        t("settings_configdir_desc", {
+          configDir: this.app.vault.configDir,
+        })
+      )
+      .addDropdown((dropdown) => {
+        dropdown.addOption("disable", t("disable"));
+        dropdown.addOption("enable", t("enable"));
+
+        const bridge = {
+          secondConfirm: false,
+        };
+        dropdown
+          .setValue(
+            `${this.plugin.settings.syncConfigDir ? "enable" : "disable"}`
+          )
+          .onChange(async (val) => {
+            if (val === "enable" && !bridge.secondConfirm) {
+              dropdown.setValue("disable");
+              new SyncConfigDirModal(this.app, this.plugin, () => {
+                bridge.secondConfirm = true;
+                dropdown.setValue("enable");
+              }).open();
+            } else {
+              bridge.secondConfirm = false;
+              this.plugin.settings.syncConfigDir = false;
+              await this.plugin.saveSettings();
+            }
+          });
+      });
+
+    const bookmarksSetting = new Setting(filtersPage)
+      .setName(t("settings_bookmarks"))
+      .setDesc(
+        t("settings_bookmarks_desc", {
+          configDir: this.app.vault.configDir,
+        })
+      )
+      .addDropdown((dropdown) => {
+        dropdown.addOption("disable", t("disable"));
+        dropdown.addOption("enable", t("enable"));
+
+        dropdown
+          .setValue(
+            `${this.plugin.settings.syncBookmarks ? "enable" : "disable"}`
+          )
+          .onChange(async (val) => {
+            this.plugin.settings.syncBookmarks = val === "enable";
+            await this.plugin.saveSettings();
+          });
+      });
+
+    let conflictActionSettingOrigDesc = t("settings_conflictaction_desc");
+    if (
+      (this.plugin.settings.conflictAction ?? "keep_newer") === "smart_conflict"
+    ) {
+      conflictActionSettingOrigDesc += t(
+        "settings_conflictaction_smart_conflict_desc"
+      );
+    }
+    const conflictActionSetting = new Setting(syncBehaviorPage)
+      .setName(t("settings_conflictaction"))
+      .setDesc(stringToFragment(conflictActionSettingOrigDesc));
+    conflictActionSetting.addDropdown((dropdown) => {
+      dropdown
+        .addOption("keep_newer", t("settings_conflictaction_keep_newer"))
+        .addOption("keep_larger", t("settings_conflictaction_keep_larger"))
+        .addOption(
+          "smart_conflict",
+          t("settings_conflictaction_smart_conflict")
+        )
+        .setValue(this.plugin.settings.conflictAction ?? "keep_newer")
+        .onChange(async (val) => {
+          this.plugin.settings.conflictAction = val as ConflictActionType;
+          await this.plugin.saveSettings();
+
+          conflictActionSettingOrigDesc = t("settings_conflictaction_desc");
+          if (
+            (this.plugin.settings.conflictAction ?? "keep_newer") ===
+            "smart_conflict"
+          ) {
+            conflictActionSettingOrigDesc += t(
+              "settings_conflictaction_smart_conflict_desc"
+            );
+          }
+          conflictActionSetting.setDesc(
+            stringToFragment(conflictActionSettingOrigDesc)
+          );
+        });
+    });
+
+    const deleteToWhereSetting = new Setting(syncBehaviorPage)
+      .setName(t("settings_deletetowhere"))
+      .setDesc(t("settings_deletetowhere_desc"))
+      .addDropdown((dropdown) => {
+        dropdown.addOption("system", t("settings_deletetowhere_system_trash"));
+        dropdown.addOption(
+          "obsidian",
+          t("settings_deletetowhere_obsidian_trash")
+        );
+        dropdown
+          .setValue(this.plugin.settings.deleteToWhere ?? "system")
+          .onChange(async (val) => {
+            this.plugin.settings.deleteToWhere = val as "system" | "obsidian";
+            await this.plugin.saveSettings();
+          });
+      });
+
+    generateClearDupFilesSettingsPart(advDiv, t, this.app, this.plugin);
 
     if (Platform.isMobile) {
       new Setting(advDiv)
@@ -2566,15 +2618,50 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
         });
     }
 
+    // custom status bar items is not supported on mobile
+    if (!Platform.isMobileApp) {
+      new Setting(advancedPage)
+        .setName(t("settings_enablestatusbar_info"))
+        .setDesc(t("settings_enablestatusbar_info_desc"))
+        .addToggle((toggle) => {
+          toggle
+            .setValue(this.plugin.settings.enableStatusBarInfo ?? false)
+            .onChange(async (val) => {
+              this.plugin.settings.enableStatusBarInfo = val;
+              await this.plugin.saveSettings();
+              new Notice(t("settings_enablestatusbar_reloadrequired_notice"));
+            });
+        });
+
+      new Setting(advancedPage)
+        .setName(t("settings_resetstatusbar_time"))
+        .setDesc(t("settings_resetstatusbar_time_desc"))
+        .addButton((button) => {
+          button.setButtonText(t("settings_resetstatusbar_button"));
+          button.onClick(async () => {
+            // reset last sync time
+            await upsertLastSuccessSyncTimeByVault(
+              this.plugin.db,
+              this.plugin.vaultRandomID,
+              -1
+            );
+            await upsertLastFailedSyncTimeByVault(
+              this.plugin.db,
+              this.plugin.vaultRandomID,
+              -1
+            );
+            this.plugin.updateLastSyncMsg(undefined, "not_syncing", null, null);
+            new Notice(t("settings_resetstatusbar_notice"));
+          });
+        });
+    }
+
     //////////////////////////////////////////////////
     // below for import and export functions
     //////////////////////////////////////////////////
 
     // import and export
-    const importExportDiv = containerEl.createEl("div");
-    importExportDiv.createEl("h2", {
-      text: t("settings_importexport"),
-    });
+    const importExportDiv = backupPage;
 
     const importExportDivSetting1 = new Setting(importExportDiv)
       .setName(t("settings_export"))
@@ -2778,8 +2865,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     // below for debug
     //////////////////////////////////////////////////
 
-    const debugDiv = containerEl.createEl("div");
-    debugDiv.createEl("h2", { text: t("settings_debug") });
+    const debugDiv = debugPage;
 
     new Setting(debugDiv)
       .setName(t("settings_debuglevel"))
@@ -3027,87 +3113,6 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
         });
       });
 
-    //////////////////////////////////////////////////
-    // THUNDER: settings page layout.
-    // Everything above created the controls in upstream order. Below only
-    // moves existing setting elements in the DOM into a clearer order and
-    // collapses the low-use sections. No control, settings key, or
-    // default is changed here.
-    //////////////////////////////////////////////////
-
-    const syncBehaviorDiv = containerEl.createDiv();
-    syncBehaviorDiv.createEl("h2", { text: "Sync behavior" });
-    syncBehaviorDiv.appendChild(autoRunSetting.settingEl);
-    syncBehaviorDiv.appendChild(runOnStartupSetting.settingEl);
-    syncBehaviorDiv.appendChild(syncOnSaveSetting.settingEl);
-    syncBehaviorDiv.appendChild(syncDirectionSetting.settingEl);
-    syncBehaviorDiv.appendChild(conflictActionSetting.settingEl);
-    syncBehaviorDiv.appendChild(deleteToWhereSetting.settingEl);
-
-    const encryptionDiv = containerEl.createDiv();
-    encryptionDiv.createEl("h2", { text: "Encryption" });
-    encryptionDiv.appendChild(passwordSetting.settingEl);
-    encryptionDiv.appendChild(encryptionMethodSetting.settingEl);
-
-    const filtersDiv = containerEl.createDiv();
-    filtersDiv.createEl("h2", { text: "Filters and safety" });
-    filtersDiv.appendChild(skipLargeFilesSetting.settingEl);
-    filtersDiv.appendChild(ignorePathsSetting.settingEl);
-    filtersDiv.appendChild(onlyAllowPathsSetting.settingEl);
-    filtersDiv.appendChild(percentage1.settingEl);
-    filtersDiv.appendChild(percentage2.settingEl);
-    filtersDiv.appendChild(syncUnderscoreSetting.settingEl);
-    filtersDiv.appendChild(configDirSetting.settingEl);
-    filtersDiv.appendChild(bookmarksSetting.settingEl);
-
-    // Advanced keeps what was not moved above (concurrency, clear
-    // duplicates, mobile status bar). The status bar items left in
-    // basicDiv move into it too, then the empty basic shell is dropped.
-    basicDiv
-      .querySelectorAll(".setting-item")
-      .forEach((el) => advDiv.appendChild(el));
-    basicDiv.remove();
-
-    const wrapInDetails = (div: HTMLDivElement, summaryText: string) => {
-      const details = containerEl.createEl("details", {
-        cls: "thunder-settings-details",
-      });
-      details.createEl("summary", { text: summaryText });
-      div.querySelector("h2")?.remove();
-      details.appendChild(div);
-      return details;
-    };
-    const advDetails = wrapInDetails(advDiv, t("settings_adv"));
-    const backupDetails = wrapInDetails(
-      importExportDiv,
-      t("settings_importexport")
-    );
-    const debugDetails = wrapInDetails(debugDiv, t("settings_debug"));
-
-    // final top-to-bottom order
-    containerEl.appendChild(serviceChooserDiv);
-    for (const div of [
-      s3Div,
-      dropboxDiv,
-      onedriveDiv,
-      webdavDiv,
-      webdisDiv,
-      onedriveFullDiv,
-      googleDriveDiv,
-      boxDiv,
-      pCloudDiv,
-      yandexDiskDiv,
-      koofrDiv,
-      azureBlobStorageDiv,
-    ]) {
-      containerEl.appendChild(div);
-    }
-    containerEl.appendChild(syncBehaviorDiv);
-    containerEl.appendChild(encryptionDiv);
-    containerEl.appendChild(filtersDiv);
-    containerEl.appendChild(advDetails);
-    containerEl.appendChild(backupDetails);
-    containerEl.appendChild(debugDetails);
   }
 
   hide() {

@@ -243,19 +243,13 @@
   display: none;
 }
 
-/* Thunder Sync: collapsed low-use settings sections */
-.thunder-settings-details {
-  margin-top: 1.2em;
-  border-top: 1px solid var(--background-modifier-border);
+/* Thunder Sync: in-tab page navigation */
+.thunder-sync-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-1, 4px);
+  border-bottom: 1px solid var(--background-modifier-border);
 }
-
-.thunder-settings-details > summary {
-  cursor: pointer;
-  font-size: var(--h2-size, 1.25em);
-  font-weight: var(--h2-weight, 600);
-  padding: 0.6em 0 0.2em;
-}
-
-.thunder-settings-details[open] > summary {
-  margin-bottom: 0.4em;
-}
+.thunder-sync-nav-button { color: var(--text-muted); background: transparent; box-shadow: none; }
+.thunder-sync-nav-button-active { color: var(--text-normal); background: var(--background-secondary); font-weight: var(--font-semibold, 600); }
+.thunder-sync-page-hide { display: none; }
