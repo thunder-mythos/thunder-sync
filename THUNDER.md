@@ -2,9 +2,9 @@
 
 Personal build of [remotely-save/remotely-save](https://github.com/remotely-save/remotely-save) for Thunder's own devices. Upstream base: master at commit `34db181` (2024-11-10), version 0.5.25. Thunder branch: `thunder`.
 
-Status (2026-11-02): renamed to Thunder Sync, settings page overhauled, pushed, and released.
-- Fork: https://github.com/thunder-mythos/remotely-save, branch `thunder` pushed and verified (head `f63e5e1` at release time).
-- BRAT release: **0.5.25-thunder.1**, non-draft, verified live at https://github.com/thunder-mythos/remotely-save/releases/tag/0.5.25-thunder.1 with assets `main.js`, `manifest.json`, `styles.css`, `thunder-sync.zip`. The release manifest carries id `thunder-sync`, name Thunder Sync, version `0.5.25-thunder.1` (downloaded back and checked).
+Status (2026-11-02): renamed to Thunder Sync, settings page overhauled, pushed, and released. GitHub repo renamed the same day from thunder-mythos/remotely-save to thunder-mythos/thunder-sync on Thunder's order, so the BRAT path matches the plugin slug; the release and branch moved with the rename.
+- Fork: https://github.com/thunder-mythos/thunder-sync, branch `thunder` pushed and verified (head `f63e5e1` at release time).
+- BRAT release: **0.5.25-thunder.1**, non-draft, verified live at https://github.com/thunder-mythos/thunder-sync/releases/tag/0.5.25-thunder.1 with assets `main.js`, `manifest.json`, `styles.css`, `thunder-sync.zip`. The release manifest carries id `thunder-sync`, name Thunder Sync, version `0.5.25-thunder.1` (downloaded back and checked).
 - The build/test verification behind it is still local/staging proof from the VM, not a live-device install proof.
 - One blocker: the release workflow is NOT live on GitHub. The gh OAuth token has no `workflow` scope, so GitHub rejected the first push for `.github/workflows/thunder-release.yml` only. The workflow is kept in the repo as `thunder-release.yml.txt`; move it back to `.github/workflows/thunder-release.yml` after a `gh auth refresh -s workflow` (needs Thunder's device approval), or create it in the GitHub web editor. Until then, releases are cut manually with `gh release create`, like this one. The bigger plugin rework is a later, separate task.
 
@@ -102,7 +102,7 @@ Also in `.env` if wanted: `DROPBOX_APP_KEY` (Dropbox with your own app key), `ON
 Planned path once released: BRAT on each of the 3 devices.
 
 1. Install BRAT from the community plugin browser if it is not already there.
-2. In BRAT, Add Beta Plugin: `thunder-mythos/remotely-save`.
+2. In BRAT, Add Beta Plugin: `thunder-mythos/thunder-sync`.
 3. Enable Thunder Sync in Community Plugins.
 4. Set up each device's settings (or copy `data.json` over with Obsidian fully quit, see Rename above).
 5. Never update this plugin from the community plugin browser afterwards. That replaces the Thunder build with upstream. Update only through BRAT from the Thunder repo.
