@@ -839,7 +839,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
       return this.plugin.i18n.t(x, vars);
     };
 
-    containerEl.createEl("h1", { text: "Remotely Save" });
+    containerEl.createEl("h1", { text: "Thunder Sync" });
 
     //////////////////////////////////////////////////
     // below for service chooser (part 1/2)
@@ -2085,7 +2085,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(basicDiv)
+    const autoRunSetting = new Setting(basicDiv)
       .setName(t("settings_autorun"))
       .setDesc(t("settings_autorun_desc"))
       .addDropdown((dropdown) => {
@@ -2123,7 +2123,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(basicDiv)
+    const runOnStartupSetting = new Setting(basicDiv)
       .setName(t("settings_runoncestartup"))
       .setDesc(t("settings_runoncestartup_desc"))
       .addDropdown((dropdown) => {
@@ -2149,7 +2149,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(basicDiv)
+    const syncOnSaveSetting = new Setting(basicDiv)
       .setName(t("settings_synconsave"))
       .setDesc(t("settings_synconsave_desc"))
       .addDropdown((dropdown) => {
@@ -2170,7 +2170,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(basicDiv)
+    const skipLargeFilesSetting = new Setting(basicDiv)
       .setName(t("settings_skiplargefiles"))
       .setDesc(t("settings_skiplargefiles_desc"))
       .addDropdown((dropdown) => {
@@ -2226,7 +2226,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
         });
     }
 
-    new Setting(basicDiv)
+    const ignorePathsSetting = new Setting(basicDiv)
       .setName(t("settings_ignorepaths"))
       .setDesc(t("settings_ignorepaths_desc"))
       .setClass("ignorepaths-settings")
@@ -2247,7 +2247,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
         textArea.inputEl.addClass("ignorepaths-textarea");
       });
 
-    new Setting(basicDiv)
+    const onlyAllowPathsSetting = new Setting(basicDiv)
       .setName(t("settings_onlyallowpaths"))
       .setDesc(t("settings_onlyallowpaths_desc"))
       .setClass("onlyallowpaths-settings")
@@ -2297,7 +2297,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(advDiv)
+    const syncUnderscoreSetting = new Setting(advDiv)
       .setName(t("settings_syncunderscore"))
       .setDesc(t("settings_syncunderscore_desc"))
       .addDropdown((dropdown) => {
@@ -2313,7 +2313,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(advDiv)
+    const configDirSetting = new Setting(advDiv)
       .setName(t("settings_configdir"))
       .setDesc(
         t("settings_configdir_desc", {
@@ -2346,7 +2346,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(advDiv)
+    const bookmarksSetting = new Setting(advDiv)
       .setName(t("settings_bookmarks"))
       .setDesc(
         t("settings_bookmarks_desc", {
@@ -2367,7 +2367,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(advDiv)
+    const deleteToWhereSetting = new Setting(advDiv)
       .setName(t("settings_deletetowhere"))
       .setDesc(t("settings_deletetowhere_desc"))
       .addDropdown((dropdown) => {
@@ -2497,7 +2497,7 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
       });
     });
 
-    new Setting(advDiv)
+    const syncDirectionSetting = new Setting(advDiv)
       .setName(t("setting_syncdirection"))
       .setDesc(stringToFragment(t("setting_syncdirection_desc")))
       .addDropdown((dropdown) => {
@@ -2745,6 +2745,11 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
     //////////////////////////////////////////////////
 
     const proDiv = containerEl.createEl("div");
+    // THUNDER: the Remotely Save account / PRO section is not shown in
+    // Thunder Sync. The part is still generated because other code holds
+    // references to the divs and settings it creates (the per-service
+    // "allowed to use" divs and hint settings), then hidden with the
+    // existing .pro-hide class. All services work without an account.
     generateProSettingsPart(
       proDiv,
       t,
@@ -2766,6 +2771,8 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
       azureBlobStorageAllowedToUsedDiv,
       azureBlobStorageNotShowUpHintSetting
     );
+
+    proDiv.addClass("pro-hide");
 
     //////////////////////////////////////////////////
     // below for debug
@@ -3019,6 +3026,88 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
           this.plugin.unload();
         });
       });
+
+    //////////////////////////////////////////////////
+    // THUNDER: settings page layout.
+    // Everything above created the controls in upstream order. Below only
+    // moves existing setting elements in the DOM into a clearer order and
+    // collapses the low-use sections. No control, settings key, or
+    // default is changed here.
+    //////////////////////////////////////////////////
+
+    const syncBehaviorDiv = containerEl.createDiv();
+    syncBehaviorDiv.createEl("h2", { text: "Sync behavior" });
+    syncBehaviorDiv.appendChild(autoRunSetting.settingEl);
+    syncBehaviorDiv.appendChild(runOnStartupSetting.settingEl);
+    syncBehaviorDiv.appendChild(syncOnSaveSetting.settingEl);
+    syncBehaviorDiv.appendChild(syncDirectionSetting.settingEl);
+    syncBehaviorDiv.appendChild(conflictActionSetting.settingEl);
+    syncBehaviorDiv.appendChild(deleteToWhereSetting.settingEl);
+
+    const encryptionDiv = containerEl.createDiv();
+    encryptionDiv.createEl("h2", { text: "Encryption" });
+    encryptionDiv.appendChild(passwordSetting.settingEl);
+    encryptionDiv.appendChild(encryptionMethodSetting.settingEl);
+
+    const filtersDiv = containerEl.createDiv();
+    filtersDiv.createEl("h2", { text: "Filters and safety" });
+    filtersDiv.appendChild(skipLargeFilesSetting.settingEl);
+    filtersDiv.appendChild(ignorePathsSetting.settingEl);
+    filtersDiv.appendChild(onlyAllowPathsSetting.settingEl);
+    filtersDiv.appendChild(percentage1.settingEl);
+    filtersDiv.appendChild(percentage2.settingEl);
+    filtersDiv.appendChild(syncUnderscoreSetting.settingEl);
+    filtersDiv.appendChild(configDirSetting.settingEl);
+    filtersDiv.appendChild(bookmarksSetting.settingEl);
+
+    // Advanced keeps what was not moved above (concurrency, clear
+    // duplicates, mobile status bar). The status bar items left in
+    // basicDiv move into it too, then the empty basic shell is dropped.
+    basicDiv
+      .querySelectorAll(".setting-item")
+      .forEach((el) => advDiv.appendChild(el));
+    basicDiv.remove();
+
+    const wrapInDetails = (div: HTMLDivElement, summaryText: string) => {
+      const details = containerEl.createEl("details", {
+        cls: "thunder-settings-details",
+      });
+      details.createEl("summary", { text: summaryText });
+      div.querySelector("h2")?.remove();
+      details.appendChild(div);
+      return details;
+    };
+    const advDetails = wrapInDetails(advDiv, t("settings_adv"));
+    const backupDetails = wrapInDetails(
+      importExportDiv,
+      t("settings_importexport")
+    );
+    const debugDetails = wrapInDetails(debugDiv, t("settings_debug"));
+
+    // final top-to-bottom order
+    containerEl.appendChild(serviceChooserDiv);
+    for (const div of [
+      s3Div,
+      dropboxDiv,
+      onedriveDiv,
+      webdavDiv,
+      webdisDiv,
+      onedriveFullDiv,
+      googleDriveDiv,
+      boxDiv,
+      pCloudDiv,
+      yandexDiskDiv,
+      koofrDiv,
+      azureBlobStorageDiv,
+    ]) {
+      containerEl.appendChild(div);
+    }
+    containerEl.appendChild(syncBehaviorDiv);
+    containerEl.appendChild(encryptionDiv);
+    containerEl.appendChild(filtersDiv);
+    containerEl.appendChild(advDetails);
+    containerEl.appendChild(backupDetails);
+    containerEl.appendChild(debugDetails);
   }
 
   hide() {

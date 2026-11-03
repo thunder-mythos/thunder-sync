@@ -242,3 +242,20 @@
 .pro-revoke-auth-button-hide {
   display: none;
 }
+
+/* Thunder Sync: collapsed low-use settings sections */
+.thunder-settings-details {
+  margin-top: 1.2em;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.thunder-settings-details > summary {
+  cursor: pointer;
+  font-size: var(--h2-size, 1.25em);
+  font-weight: var(--h2-weight, 600);
+  padding: 0.6em 0 0.2em;
+}
+
+.thunder-settings-details[open] > summary {
+  margin-bottom: 0.4em;
+}

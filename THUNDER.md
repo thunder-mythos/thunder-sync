@@ -1,20 +1,40 @@
-# Remotely Save, Thunder Build
+# Thunder Sync (Remotely Save fork), Thunder Build
 
 Personal build of [remotely-save/remotely-save](https://github.com/remotely-save/remotely-save) for Thunder's own devices. Upstream base: master at commit `34db181` (2024-11-10), version 0.5.25. Thunder branch: `thunder`.
 
-Status (2026-11-02): built and verified locally on the VM only. This is local/staging proof, not live proof. No GitHub push and no release yet, because the plugin rename below is waiting on Thunder's confirmed name.
+Status (2026-11-02): renamed to Thunder Sync, settings page overhauled, built and verified locally on the VM only. This is local/staging proof, not live proof. No GitHub push and no release yet: Thunder ordered the settings overhaul before any push, and a bigger plugin rework comes later as a separate task.
 
-## Rename pending (read before any release)
+## Rename (confirmed by Thunder, 2026-11-02)
 
-Thunder's call: this build gets a NEW plugin id (slug) and display name, so it installs as a separate plugin from upstream and can never be overwritten by the community version. Proposed, not yet confirmed: name "Remotely Save Thunder", slug "remotely-save-thunder".
+Name: **Thunder Sync**. Slug / plugin id: **thunder-sync**. This build installs as a separate plugin from upstream and can never be overwritten by the community version. The rename is in `manifest.json`, `manifest-beta.json`, and `package.json` name, plus the settings page H1.
 
-- The current local build still carries the upstream id `remotely-save`. The rename lands before the first release, and only in `manifest.json`, `manifest-beta.json`, and `package.json` name.
 - Internal strings do NOT change: the OAuth callback URIs (`remotely-save-cb`, `remotely-save-cb-pro`, and friends in `src/baseTypes.ts` and `pro/src/baseTypesPro.ts`), the OneDrive App Folder path segment `remotely-save`, and the remote metadata filenames in `src/metadataOnRemote.ts`. Changing those would orphan the existing remote vault at `Apps/remotely-save/BaseVault` and break OAuth redirects. The rename is an Obsidian-side identity change only.
-- Consequences once renamed:
-  - New plugin folder: `.obsidian/plugins/<new-slug>/` on each device.
-  - Settings start fresh per device. `data.json` does not carry over from the old `remotely-save` folder automatically. To keep existing OneDrive auth and settings, quit Obsidian fully, copy the old `.obsidian/plugins/remotely-save/data.json` into the new folder, then reopen. Otherwise just re-auth each service.
-  - Command ids change with the slug, for example `<new-slug>:start-sync`.
+- Consequences:
+  - New plugin folder: `.obsidian/plugins/thunder-sync/` on each device.
+  - Settings start fresh per device. `data.json` does not carry over from the old `remotely-save` folder automatically. To keep existing OneDrive auth and settings, quit Obsidian fully, copy the old `.obsidian/plugins/remotely-save/data.json` into `.obsidian/plugins/thunder-sync/`, then reopen. Otherwise just re-auth each service.
+  - Command ids change with the slug, for example `thunder-sync:start-sync`.
   - BRAT installs code only. Settings (`data.json`) live per device and are never pulled by BRAT.
+
+## Settings page overhaul (2026-11-02, before any push)
+
+Thunder's order: clear the settings page out, no bs. Presentation and order only: every control and feature still exists, no settings key renamed, no default changed.
+
+Before, top to bottom: H1, service chooser (dropdown rendered after all service panels), the selected service panel, Basic (password, encryption method, auto run, run on startup, sync on save, skip large files, status bar, ignore paths, only allow paths), Advanced (concurrency, sync underscore items, config folder, bookmarks, delete to where, conflict action, clear duplicates, protect modify percentage, sync direction), Import/Export, the Remotely Save PRO account section, Debug.
+
+After, top to bottom:
+1. Service chooser, then the selected service panel only (unchanged behavior).
+2. **Sync behavior**: auto run interval, run on startup, sync on save, sync direction, conflict action (Smart Conflict is a plain option, no PRO mention), delete behavior.
+3. **Encryption**: password, encryption method.
+4. **Filters and safety**: skip large files, ignore paths, only allow paths, protect modify percentage, sync files starting with underscore, config folder sync, bookmarks sync.
+5. **Advanced** (collapsed by default, `<details>`): concurrency, clear duplicate files, status bar items, mobile status bar. One click to open.
+6. **Back up settings (import / export)** (collapsed by default): the old Import/Export section, QR export and import unchanged.
+7. **Debug** (collapsed by default): log level, sync plans, profiler, cache and record tools, unchanged.
+
+How it was done, `src/settings.ts`: the controls are still created by the upstream code in upstream order, then the Thunder layout block at the end of `display()` moves the existing setting elements into the new section divs, drops the empty Basic shell, and wraps Advanced / Import-Export / Debug in `<details>` elements whose summary replaces the old H2. Minimal CSS for the details sections is at the end of `styles.css` (class `thunder-settings-details`).
+
+PRO account section: still generated (other code holds references to the per-service "allowed to use" divs and hint settings it wires up), then hidden with the existing `.pro-hide` class. It is not visible, not reachable, and no account is needed. Service auth panels (Google Drive, Box, and the rest) are untouched and fully in place.
+
+Words: all "(PRO)" / "(PRO feature)" labels are stripped from the English strings, Smart Conflict is just "Smart Conflict", its description is now two plain sentences, every service's long disclaimer wall is cut to at most 2 short sentences (what it connects to, and that credentials stay on the device), and the section headings the overhaul touches are short plain labels ("Remote service", "Advanced", "Back up settings (import / export)"). English locale only; keys unchanged, values only.
 
 ## What was changed vs upstream
 
@@ -25,7 +45,7 @@ Nothing was cut. Every service and feature is kept: S3 and S3-compatible, Dropbo
    - `DEFAULT_PRO_CONFIG.enabledProFeatures` is seeded with that list, so fresh installs show every PRO service panel.
    - `checkProRunnableAndFixInplace` (the sync-time gate, called once from `pro/src/sync.ts`) now always passes, resets a stale empty feature list in place, and never contacts the Remotely Save account server.
    - `src/main.ts` loadSettings also forces the full feature list on load, because the settings UI hides each PRO service panel unless its feature is listed. That covers existing installs whose `data.json` has the old empty list.
-   - The PRO account UI is left in place and harmless. No PRO service code was deleted.
+   - The PRO account UI is generated but hidden from the settings page (see Settings page overhaul above). No PRO service code was deleted.
 2. Build fixes for age, `package.json` only (upstream ships no lockfile, so installs float and the 2024 ranges now resolve to breaking versions):
    - `typescript` pinned to `5.5.4` (was `^5.5.4`, which now floats to 5.9.x and fails the type check with 19 errors).
    - `node-diff3` pinned to `3.1.2` (3.2.x switched to exports-only packaging and breaks the repo's `moduleResolution: "node"`).
@@ -79,10 +99,10 @@ Planned path once released: BRAT on each of the 3 devices.
 
 1. Install BRAT from the community plugin browser if it is not already there.
 2. In BRAT, Add Beta Plugin: `thunder-mythos/remotely-save`.
-3. Enable the plugin in Community Plugins under its new name.
+3. Enable Thunder Sync in Community Plugins.
 4. Set up each device's settings (or copy `data.json` over with Obsidian fully quit, see Rename above).
 5. Never update this plugin from the community plugin browser afterwards. That replaces the Thunder build with upstream. Update only through BRAT from the Thunder repo.
 
-Manual install alternative: quit Obsidian fully, copy `main.js`, `manifest.json`, and `styles.css` from a release into `.obsidian/plugins/<new-slug>/`, reopen, enable.
+Manual install alternative: quit Obsidian fully, copy `main.js`, `manifest.json`, and `styles.css` from a release into `.obsidian/plugins/thunder-sync/`, reopen, enable.
 
 Always back up the vault before a first sync with any new build. That is upstream's own warning and it stands.

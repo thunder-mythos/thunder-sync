@@ -1,1 +1,13 @@
-{"customBranch":"thunder","forkRepo":"thunder-mythos/remotely-save (not yet created; push and release held until the rename is confirmed)","lastSyncedDate":"2026-11-02","note":"Personal build for Thunder's own devices. All upstream features kept, PRO subscription check neutralized locally (see THUNDER.md). Local commit only so far; no GitHub push, no fork, no release as of 2026-11-02, per Thunder holding the release until the new plugin name/slug is confirmed.","pluginId":"remotely-save (rename pending Thunder confirmation; proposed slug remotely-save-thunder, name Remotely Save Thunder)","pushedBranch":null,"releaseTag":null,"upstreamCommit":"34db181af002f8d71ea0a87e7965abc57b294914","upstreamRepo":"https://github.com/remotely-save/remotely-save.git","upstreamVersion":"0.5.25"}
+{
+  "customBranch": "thunder",
+  "forkRepo": "thunder-mythos/remotely-save (not yet created; created at push time in this run)",
+  "lastSyncedDate": "2026-11-02",
+  "note": "Personal build for Thunder's own devices. All upstream features kept, PRO subscription check neutralized locally (see THUNDER.md). Rename to Thunder Sync / thunder-sync confirmed by Thunder and applied 2026-11-02. Settings page overhaul done before any push, per Thunder's order. Local commits only; no GitHub push, no fork, no release yet. Push held pending Thunder's separate full plugin rework task.",
+  "pluginId": "thunder-sync",
+  "pluginName": "Thunder Sync",
+  "pushedBranch": null,
+  "releaseTag": null,
+  "upstreamCommit": "34db181af002f8d71ea0a87e7965abc57b294914",
+  "upstreamRepo": "https://github.com/remotely-save/remotely-save.git",
+  "upstreamVersion": "0.5.25"
+}
