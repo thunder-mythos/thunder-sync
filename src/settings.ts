@@ -58,6 +58,8 @@ import {
   clearAllPrevSyncRecordByVault,
   clearAllSyncPlanRecords,
   destroyDBs,
+  getLastFailedSyncTimeByVault,
+  getLastSuccessSyncTimeByVault,
   upsertLastFailedSyncTimeByVault,
   upsertLastSuccessSyncTimeByVault,
 } from "./localdb";
@@ -936,6 +938,66 @@ export class RemotelySaveSettingTab extends PluginSettingTab {
         ? this.thunderActivePage
         : "service"
     );
+
+    //////////////////////////////////////////////////
+    // THUNDER: service page status summary (Tier 1)
+    // Plain lines at the top of the service page: which service,
+    // when the last successful and last failed syncs were, and
+    // whether the most recent attempt failed. Values come from the
+    // same per-vault records the status bar reset button clears.
+    //////////////////////////////////////////////////
+    const thunderStatusDiv = servicePage.createDiv({
+      cls: "thunder-sync-status-summary",
+    });
+    thunderStatusDiv.createEl("h2", { text: "Status" });
+    const thunderStatusLines = thunderStatusDiv.createEl("div");
+    thunderStatusLines.setText("Loading status...");
+    (async () => {
+      try {
+        const fmtSyncTime = (millis: number | null | undefined) => {
+          if (millis === null || millis === undefined || millis <= 0) {
+            return undefined;
+          }
+          return new Date(millis).toLocaleString();
+        };
+        const [lastSuccessMillis, lastFailedMillis] = await Promise.all([
+          getLastSuccessSyncTimeByVault(
+            this.plugin.db,
+            this.plugin.vaultRandomID
+          ),
+          getLastFailedSyncTimeByVault(
+            this.plugin.db,
+            this.plugin.vaultRandomID
+          ),
+        ]);
+        const lastSuccessText = fmtSyncTime(lastSuccessMillis);
+        const lastFailedText = fmtSyncTime(lastFailedMillis);
+        const lines: string[] = [
+          `Service: ${this.plugin.settings.serviceType}`,
+          `Last successful sync: ${lastSuccessText ?? "never"}`,
+          `Last failed sync: ${lastFailedText ?? "none"}`,
+        ];
+        if (
+          lastFailedMillis !== null &&
+          lastFailedMillis !== undefined &&
+          lastFailedMillis > 0 &&
+          (lastSuccessMillis === null ||
+            lastSuccessMillis === undefined ||
+            lastFailedMillis > lastSuccessMillis)
+        ) {
+          lines.push("Most recent sync attempt failed.");
+        } else if (lastSuccessText !== undefined) {
+          lines.push("Most recent sync attempt succeeded.");
+        }
+        thunderStatusLines.empty();
+        for (const line of lines) {
+          thunderStatusLines.createEl("div", { text: line });
+        }
+      } catch (e) {
+        console.error(e);
+        thunderStatusLines.setText("Status unavailable.");
+      }
+    })();
 
     //////////////////////////////////////////////////
     // below for service chooser (part 1/2)

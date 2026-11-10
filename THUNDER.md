@@ -60,6 +60,16 @@ Nothing was cut. Every service and feature is kept: S3 and S3-compatible, Dropbo
 5. `thunder.env.example.txt`: blank template for a personal build's OAuth credentials.
 6. `thunder-sync-state.json`: fork and sync state.
 
+## Approved rework slices, first accumulation (2026-11-09, local only, not released)
+
+Three slices Thunder approved on Nov 9, 2026, built on the `thunder` branch and held as unreleased accumulation under his sub-version model. No release cut, nothing pushed.
+
+1. **minAppVersion 1.13.0**: `manifest.json` and `manifest-beta.json`, was `0.13.21`. `versions.json` deliberately untouched; it records already-released versions and gets its new entry when a release is actually cut.
+2. **Auto sync failure notification**: `src/main.ts`, `errNotifyFunc`. Failures now raise a Notice for every trigger source; upstream routed them through `getNotice`, which only fires for manual/dry runs, so auto failures were silent. Progress and success notices still go through `getNotice` unchanged, so auto success stays silent. Auto-source failure notices are throttled to one per 10 minutes (new plugin field `lastAutoFailNoticeMillis`) so a repeatedly failing auto run cannot spam; the failure is still written to the last-failed record either way.
+3. **Service page status summary (Tier 1)**: `src/settings.ts` plus one rule in `styles.css`. A "Status" block at the top of the service page shows the current service, the last successful sync time, the last failed sync time, and whether the most recent attempt failed or succeeded, read from the same per-vault records (`getLastSuccessSyncTimeByVault` / `getLastFailedSyncTimeByVault`) that the status bar reset button clears. Plain English lines, no new i18n keys, matching the settings redo precedent.
+
+Verification (VM, local/staging, 2026-11-09): `tsc -noEmit -skipLibCheck` clean; test suite 72 passing, 0 failing (run via `node --import=tsx node_modules/mocha/bin/mocha.js` because `node_modules/.bin` is absent on this VM, same install quirk as the build record below; the 2 OpenSSL failures from the Nov 2 record did not reproduce this run); webpack production build compiles, `main.js` 3.99 MiB, new strings verified present in the bundle by grep. Runtime behavior inside Obsidian is not yet verified on a device.
+
 ## Local build record (2026-11-02, VM, Node 24.22.1, local/staging only)
 
 - `npm install` fails on this VM with EPERM on a bin-link chown (workspace filesystem). Workaround used: `npm install --no-bin-links`, then binaries are run directly with node (for example `node node_modules/webpack/bin/webpack.js --mode production`). On a normal filesystem and in GitHub Actions, plain `npm install` and `npm run build` work.

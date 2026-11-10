@@ -253,3 +253,5 @@
 .thunder-sync-nav-button { color: var(--text-muted); background: transparent; box-shadow: none; }
 .thunder-sync-nav-button-active { color: var(--text-normal); background: var(--background-secondary); font-weight: var(--font-semibold, 600); }
 .thunder-sync-page-hide { display: none; }
+.thunder-sync-status-summary { border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m, 6px); padding: var(--size-4-2, 8px) var(--size-4-3, 12px); margin-bottom: var(--size-4-3, 12px); color: var(--text-muted); }
+.thunder-sync-status-summary h2 { margin-top: 0; }

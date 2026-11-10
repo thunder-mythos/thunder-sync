@@ -231,6 +231,7 @@ export default class RemotelySavePlugin extends Plugin {
   debugServerTemp?: string;
   syncEvent?: Events;
   appContainerObserver?: MutationObserver;
+  lastAutoFailNoticeMillis?: number;
 
   async syncRun(triggerSource: SyncTriggerSourceType = "manual") {
     let profiler: Profiler | undefined = undefined;
@@ -394,14 +395,31 @@ export default class RemotelySavePlugin extends Plugin {
       }
     };
 
+    // THUNDER: sync failures notify for every trigger source, not only
+    // manual/dry runs. Progress and success notices stay manual/dry
+    // only (see getNotice above); auto success stays silent. Failure
+    // notices for auto sources are throttled to one per 10 minutes so
+    // a repeatedly failing auto run cannot spam notices; the failure
+    // itself is still recorded by statusBarFunc either way.
     const errNotifyFunc = async (s: SyncTriggerSourceType, error: Error) => {
       console.error(error);
+      if (s !== "manual" && s !== "dry") {
+        const now = Date.now();
+        const last = this.lastAutoFailNoticeMillis ?? 0;
+        if (now - last < 10 * 60 * 1000) {
+          console.warn(
+            `thunder-sync: suppressing repeated auto sync failure notice (source=${s})`
+          );
+          return;
+        }
+        this.lastAutoFailNoticeMillis = now;
+      }
       if (error instanceof AggregateError) {
         for (const e of error.errors) {
-          getNotice(s, e.message, 10 * 1000);
+          new Notice(e.message, 10 * 1000);
         }
       } else {
-        getNotice(s, error?.message ?? "error while sync", 10 * 1000);
+        new Notice(error?.message ?? "error while sync", 10 * 1000);
       }
     };
 
