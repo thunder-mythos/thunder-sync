@@ -1,13 +1,13 @@
 {
   "customBranch": "thunder",
   "forkRepo": "https://github.com/thunder-mythos/thunder-sync",
-  "lastSyncedDate": "2026-11-03",
-  "note": "Release 0.5.25-thunder.2 cut 2026-11-03 on Thunder's order: settings page redo (one-page-at-a-time nav, Minimal Theme Settings + Style Settings model, no key or default changed), committed as 8112f79, pushed, and released as Latest with main.js, manifest.json, styles.css, thunder-sync.zip, downloaded back and hash-checked against the build Thunder hand-approved on his PC. Blocker unchanged: release workflow not live on GitHub (gh token has no workflow scope); workflow kept as thunder-release.yml.txt, releases cut manually with gh. Full plugin rework is a later separate task.",
+  "lastSyncedDate": "2026-11-14",
+  "note": "Release 0.5.25-thunder.3 cut 2026-11-14 on Thunder's order: one-line webpack publicPath fix (explicit empty publicPath; fixes 'Automatic publicPath is not supported in this browser' load failure on Obsidian 1.15.1 via Lazy Plugins). Fix commit 49c214f merged into thunder as 9e3dec2, branch pushed, versions.json entry added, released as Latest with main.js, manifest.json, styles.css, thunder-sync.zip, downloaded back and hash-checked against the build Thunder tried on his PC Nov 14. Tag points at the fix commit, same as thunder.2's tag pointed at the settings-redo commit. The Nov 10 Tier 0 slices live on thunder in source only and are not in this build. Blocker unchanged: release workflow not live on GitHub (gh token has no workflow scope); workflow kept as thunder-release.yml.txt, releases cut manually with gh. Pushes need git-lfs on PATH (~/workspace/bin/git-lfs) or the pre-push hook fails the push.",
   "pluginId": "thunder-sync",
   "pluginName": "Thunder Sync",
   "pushedBranch": "thunder",
-  "releaseTag": "0.5.25-thunder.2",
-  "releaseUrl": "https://github.com/thunder-mythos/thunder-sync/releases/tag/0.5.25-thunder.2",
+  "releaseTag": "0.5.25-thunder.3",
+  "releaseUrl": "https://github.com/thunder-mythos/thunder-sync/releases/tag/0.5.25-thunder.3",
   "upstreamCommit": "34db181af002f8d71ea0a87e7965abc57b294914",
   "upstreamRepo": "https://github.com/remotely-save/remotely-save.git",
   "upstreamVersion": "0.5.25"
