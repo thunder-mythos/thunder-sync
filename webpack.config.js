@@ -28,6 +28,12 @@ module.exports = {
     filename: "main.js",
     path: __dirname,
     libraryTarget: "commonjs",
+    // No "auto": Obsidian can load main.js with no script tag in the page
+    // (Lazy Plugins, dynamic import), and webpack's auto publicPath runtime
+    // then throws "Automatic publicPath is not supported in this browser"
+    // before any plugin code runs. The plugin loads no chunks from a URL,
+    // so a fixed empty publicPath changes nothing else.
+    publicPath: "",
   },
   plugins: [
     new webpack.DefinePlugin({
